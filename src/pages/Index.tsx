@@ -1,8 +1,9 @@
-
 import React, { useState } from 'react';
 import { FileUpload } from '@/components/FileUpload';
 import { ReportGenerator } from '@/components/ReportGenerator';
 import { ReportDisplay } from '@/components/ReportDisplay';
+import { ChatInterface } from '@/components/ChatInterface';
+import { answerQuestionFromReport } from '@/utils/enhancedAiProcessor';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,15 +22,24 @@ const Index = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [generatedReport, setGeneratedReport] = useState<CreditReport | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [reportContext, setReportContext] = useState<string>(''); // Store extracted text for Q&A
+  const [apiKey, setApiKey] = useState<string>(''); // Store API key for chat
 
   const handleFileUpload = (file: File) => {
     setUploadedFile(file);
     setGeneratedReport(null);
+    setReportContext('');
   };
 
-  const handleReportGenerated = (report: CreditReport) => {
+  const handleReportGenerated = (report: CreditReport, extractedText?: string, userApiKey?: string) => {
     setGeneratedReport(report);
     setIsProcessing(false);
+    if (extractedText) {
+      setReportContext(extractedText);
+    }
+    if (userApiKey) {
+      setApiKey(userApiKey);
+    }
   };
 
   const handleStartProcessing = () => {
@@ -40,6 +50,34 @@ const Index = () => {
     setUploadedFile(null);
     setGeneratedReport(null);
     setIsProcessing(false);
+    setReportContext('');
+    setApiKey('');
+  };
+
+  const handleAskQuestion = async (question: string): Promise<string> => {
+    try {
+      if (!reportContext || !apiKey) {
+        return "I don't have enough context or API access to answer that question. Please generate a report first.";
+      }
+
+      if (!generatedReport) {
+        return "Please generate a report first before asking questions.";
+      }
+
+      // Use the sophisticated Q&A system
+      const answer = await answerQuestionFromReport(
+        question,
+        reportContext,
+        generatedReport.companyName,
+        apiKey
+      );
+
+      return answer;
+
+    } catch (error) {
+      console.error('Error answering question:', error);
+      return "I encountered an error while processing your question. Please try again or check your API key.";
+    }
   };
 
   return (
@@ -147,7 +185,22 @@ const Index = () => {
                 Generate New Report
               </Button>
             </div>
-            <ReportDisplay report={generatedReport} />
+            
+            {/* Side by Side Layout */}
+            <div className="grid xl:grid-cols-2 gap-6">
+              {/* Report Display - Left Side */}
+              <div className="order-1">
+                <ReportDisplay report={generatedReport} />
+              </div>
+              
+              {/* Chat Interface - Right Side */}
+              <div className="order-2 xl:sticky xl:top-6 xl:h-fit">
+                <ChatInterface 
+                  companyName={generatedReport.companyName}
+                  onAskQuestion={handleAskQuestion}
+                />
+              </div>
+            </div>
           </div>
         )}
       </main>

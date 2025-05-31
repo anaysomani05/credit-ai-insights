@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -146,8 +147,20 @@ ${report.managementCommentary}
               </div>
               
               <div className="prose max-w-none">
-                <div className="text-slate-700 whitespace-pre-line leading-relaxed">
-                  {section.content}
+                <div className="text-slate-700 leading-relaxed space-y-3">
+                  <ReactMarkdown 
+                    components={{
+                      p: ({children}) => <p className="mb-3 text-slate-700">{children}</p>,
+                      ul: ({children}) => <ul className="space-y-2 ml-4">{children}</ul>,
+                      ol: ({children}) => <ol className="space-y-2 ml-4">{children}</ol>,
+                      li: ({children}) => <li className="text-slate-700 leading-relaxed">{children}</li>,
+                      strong: ({children}) => <strong className="font-semibold text-slate-900">{children}</strong>,
+                      h3: ({children}) => <h3 className="font-semibold text-slate-900 mt-4 mb-2">{children}</h3>,
+                      h4: ({children}) => <h4 className="font-medium text-slate-800 mt-3 mb-2">{children}</h4>,
+                    }}
+                  >
+                    {section.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             </div>

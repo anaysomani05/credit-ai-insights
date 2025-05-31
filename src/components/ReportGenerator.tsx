@@ -6,13 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { CreditReport } from '@/pages/Index';
 import { extractPDFText } from '@/utils/pdfProcessor';
-import { generateReportSections } from '@/utils/aiProcessor';
+import { generateEnhancedReportSections } from '@/utils/enhancedAiProcessor';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Loader2 } from 'lucide-react';
 
 interface ReportGeneratorProps {
   file: File;
-  onReportGenerated: (report: CreditReport) => void;
+  onReportGenerated: (report: CreditReport, extractedText?: string, apiKey?: string) => void;
   onStartProcessing: () => void;
 }
 
@@ -63,18 +63,20 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
         throw new Error("Could not extract sufficient text from the PDF");
       }
 
-      // Generate report sections using AI
+      // Generate report sections using enhanced AI processor
       toast({
         title: "Analyzing content",
         description: "Generating AI-powered insights...",
       });
 
-      const reportSections = await generateReportSections(
+      const reportSections = await generateEnhancedReportSections(
         extractedText, 
         companyName, 
         apiKey,
         (progress) => setProgress(progress * 100)
       );
+
+      console.log('Generated report sections:', reportSections);
 
       const report: CreditReport = {
         companyName: companyName.trim(),
@@ -85,7 +87,7 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
         generatedAt: new Date().toISOString(),
       };
 
-      onReportGenerated(report);
+      onReportGenerated(report, extractedText, apiKey);
       
       toast({
         title: "Report generated successfully",
@@ -147,7 +149,16 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
         {isGenerating && (
           <div className="mt-6 space-y-2">
             <div className="flex justify-between text-sm text-slate-600">
-              <span>Processing document...</span>
+              <span>
+                {progress < 10 ? 'Cleaning and preprocessing text...' :
+                 progress < 20 ? 'Splitting into semantic chunks...' :
+                 progress < 30 ? 'Creating vector embeddings...' :
+                 progress < 40 ? 'Setting up semantic search...' :
+                 progress < 55 ? 'Generating company overview...' :
+                 progress < 70 ? 'Analyzing financial highlights...' :
+                 progress < 85 ? 'Identifying key risks...' :
+                 'Extracting management commentary...'}
+              </span>
               <span>{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-2" />
@@ -173,12 +184,12 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       </Card>
 
       <Card className="p-6 bg-blue-50 border-blue-200">
-        <h4 className="font-semibold text-blue-900 mb-2">What we'll analyze:</h4>
+        <h4 className="font-semibold text-blue-900 mb-2">Enhanced RAG Analysis:</h4>
         <ul className="text-blue-800 space-y-1 text-sm">
-          <li>• Company overview and business model</li>
-          <li>• Financial highlights and key metrics</li>
-          <li>• Risk factors and mitigation strategies</li>
-          <li>• Management commentary and outlook</li>
+          <li>• Semantic text chunking and preprocessing</li>
+          <li>• Vector embeddings for accurate information retrieval</li>
+          <li>• Context-aware section generation</li>
+          <li>• Reduced repetition and improved accuracy</li>
         </ul>
       </Card>
     </div>
