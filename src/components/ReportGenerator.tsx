@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { CreditReport } from '@/pages/Index';
-import { extractPDFText } from '@/utils/pdfProcessor';
+import { extractPDFText, estimateProcessingTime } from '@/utils/pdfProcessor';
 import { generateEnhancedReportSections } from '@/utils/enhancedAiProcessor';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText, Loader2, Clock } from 'lucide-react';
 
 interface ReportGeneratorProps {
   file: File;
@@ -25,7 +25,51 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
   const [apiKey, setApiKey] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState('');
+  const [timeEstimate, setTimeEstimate] = useState<{
+    pdfExtractionTime: number;
+    totalEstimatedTime: number;
+    pages: number;
+  } | null>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const { toast } = useToast();
+
+  // Calculate time estimates when file changes
+  useEffect(() => {
+    const estimates = estimateProcessingTime(file);
+    setTimeEstimate(estimates);
+  }, [file]);
+
+  // Update elapsed time during processing
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isGenerating && startTime) {
+      interval = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isGenerating, startTime]);
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getStepMessage = (progress: number): string => {
+    if (progress < 5) return 'Initializing processing...';
+    if (progress < 20) return 'Extracting text from PDF...';
+    if (progress < 30) return 'Cleaning and preprocessing text...';
+    if (progress < 40) return 'Creating semantic chunks...';
+    if (progress < 70) return 'Generating embeddings...';
+    if (progress < 85) return 'Building vector search index...';
+    if (progress < 95) return 'Generating report sections...';
+    return 'Finalizing report...';
+  };
 
   const handleGenerate = async () => {
     if (!companyName.trim()) {
@@ -47,33 +91,58 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
     }
 
     setIsGenerating(true);
+    setStartTime(Date.now());
     onStartProcessing();
     setProgress(0);
+    setElapsedTime(0);
+
+    // Set timeout for the entire process (8 minutes for large files)
+    const processingTimeout = setTimeout(() => {
+      setIsGenerating(false);
+      toast({
+        title: "Processing timeout",
+        description: "The file was too large to process in time. Please try with a smaller file or contact support.",
+        variant: "destructive",
+      });
+    }, 8 * 60 * 1000);
 
     try {
-      // Extract text from PDF
+      // Step 1: Extract text from PDF
+      setCurrentStep('Extracting text from PDF...');
       toast({
         title: "Processing document",
         description: "Extracting text from PDF...",
       });
       
-      const extractedText = await extractPDFText(file);
+      const extractedText = await extractPDFText(file, (pdfProgress) => {
+        const overallProgress = pdfProgress * 0.2; // PDF extraction is 20% of total
+        setProgress(overallProgress * 100);
+        setCurrentStep(getStepMessage(overallProgress * 100));
+      });
       
       if (!extractedText || extractedText.length < 100) {
         throw new Error("Could not extract sufficient text from the PDF");
       }
 
-      // Generate report sections using enhanced AI processor
+      console.log(`Extracted ${extractedText.length} characters from PDF`);
+
+      // Step 2: Generate report sections using enhanced AI processor
+      setCurrentStep('Analyzing content with AI...');
       toast({
-        title: "Analyzing content",
-        description: "Generating AI-powered insights...",
+        title: "Generating insights",
+        description: "Creating AI-powered analysis...",
       });
 
       const reportSections = await generateEnhancedReportSections(
         extractedText, 
         companyName, 
         apiKey,
-        (progress) => setProgress(progress * 100)
+        (aiProgress) => {
+          const overallProgress = 0.2 + (aiProgress * 0.8); // AI processing is 80% of total
+          setProgress(overallProgress * 100);
+          setCurrentStep(getStepMessage(overallProgress * 100));
+        },
+        file // Pass file for caching
       );
 
       console.log('Generated report sections:', reportSections);
@@ -87,14 +156,17 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
         generatedAt: new Date().toISOString(),
       };
 
+      clearTimeout(processingTimeout);
       onReportGenerated(report, extractedText, apiKey);
       
+      const finalElapsed = Math.floor((Date.now() - (startTime || 0)) / 1000);
       toast({
         title: "Report generated successfully",
-        description: "Your credit analysis report is ready.",
+        description: `Analysis completed in ${formatTime(finalElapsed)}.`,
       });
 
     } catch (error) {
+      clearTimeout(processingTimeout);
       console.error('Error generating report:', error);
       toast({
         title: "Generation failed",
@@ -104,6 +176,9 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
     } finally {
       setIsGenerating(false);
       setProgress(0);
+      setCurrentStep('');
+      setStartTime(null);
+      setElapsedTime(0);
     }
   };
 
@@ -112,9 +187,21 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       <Card className="p-6">
         <div className="flex items-center space-x-3 mb-6">
           <FileText className="h-6 w-6 text-blue-600" />
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">Document Ready</h3>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-slate-900">Document Ready for Processing</h3>
             <p className="text-slate-600">{file.name}</p>
+            {timeEstimate && (
+              <div className="flex items-center space-x-4 mt-2 text-sm text-slate-500">
+                <div className="flex items-center space-x-1">
+                  <FileText className="h-4 w-4" />
+                  <span>~{timeEstimate.pages} pages</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Clock className="h-4 w-4" />
+                  <span>Est. {formatTime(timeEstimate.totalEstimatedTime)}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -127,6 +214,7 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               onChange={(e) => setCompanyName(e.target.value)}
               placeholder="e.g., Reliance Industries Limited"
               className="mt-1"
+              disabled={isGenerating}
             />
           </div>
 
@@ -139,6 +227,7 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="sk-..."
               className="mt-1"
+              disabled={isGenerating}
             />
             <p className="text-sm text-slate-500 mt-1">
               Your API key is stored locally and not sent to our servers
@@ -147,21 +236,20 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
         </div>
 
         {isGenerating && (
-          <div className="mt-6 space-y-2">
-            <div className="flex justify-between text-sm text-slate-600">
-              <span>
-                {progress < 10 ? 'Cleaning and preprocessing text...' :
-                 progress < 20 ? 'Splitting into semantic chunks...' :
-                 progress < 30 ? 'Creating vector embeddings...' :
-                 progress < 40 ? 'Setting up semantic search...' :
-                 progress < 55 ? 'Generating company overview...' :
-                 progress < 70 ? 'Analyzing financial highlights...' :
-                 progress < 85 ? 'Identifying key risks...' :
-                 'Extracting management commentary...'}
-              </span>
-              <span>{Math.round(progress)}%</span>
+          <div className="mt-6 space-y-3">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-600 font-medium">{currentStep}</span>
+              <div className="flex items-center space-x-4 text-slate-500">
+                <span>{Math.round(progress)}%</span>
+                <span>⏱️ {formatTime(elapsedTime)}</span>
+                {timeEstimate && (
+                  <span className="text-xs">
+                    / ~{formatTime(timeEstimate.totalEstimatedTime)}
+                  </span>
+                )}
+              </div>
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress value={progress} className="h-3" />
           </div>
         )}
 

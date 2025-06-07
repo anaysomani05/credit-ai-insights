@@ -7,7 +7,7 @@ import { answerQuestionFromReport } from '@/utils/enhancedAiProcessor';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, TrendingUp, Shield, Users } from 'lucide-react';
+import { FileText, TrendingUp, Shield, Users, Zap } from 'lucide-react';
 
 export interface CreditReport {
   companyName: string;
@@ -96,7 +96,7 @@ const Index = () => {
               </div>
             </div>
             <Badge variant="secondary" className="bg-green-100 text-green-800">
-              MVP v1.0
+              Enhanced v2.0
             </Badge>
           </div>
         </div>
@@ -124,16 +124,16 @@ const Index = () => {
                 <div className="bg-blue-100 p-3 rounded-full w-fit mx-auto">
                   <FileText className="h-6 w-6 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">PDF Processing</h3>
-                <p className="text-slate-600">Advanced text extraction from annual reports and regulatory filings</p>
+                <h3 className="text-lg font-semibold text-slate-900">Advanced PDF Processing</h3>
+                <p className="text-slate-600">Efficient text extraction from annual reports and regulatory filings</p>
               </Card>
 
               <Card className="p-6 text-center space-y-4 hover:shadow-lg transition-shadow">
                 <div className="bg-green-100 p-3 rounded-full w-fit mx-auto">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
+                  <Zap className="h-6 w-6 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">Financial Analysis</h3>
-                <p className="text-slate-600">Extract key metrics: Revenue, EBITDA, ROE, Debt/Equity ratios</p>
+                <h3 className="text-lg font-semibold text-slate-900">AI-Powered Analysis</h3>
+                <p className="text-slate-600">Advanced RAG processing with intelligent section generation</p>
               </Card>
 
               <Card className="p-6 text-center space-y-4 hover:shadow-lg transition-shadow">
@@ -141,7 +141,7 @@ const Index = () => {
                   <Shield className="h-6 w-6 text-purple-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900">Risk Assessment</h3>
-                <p className="text-slate-600">AI-powered identification of key business and financial risks</p>
+                <p className="text-slate-600">Comprehensive identification of key business and financial risks</p>
               </Card>
             </div>
 
