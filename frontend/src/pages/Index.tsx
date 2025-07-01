@@ -19,8 +19,14 @@ export interface CreditReport {
   generatedAt: string;
 }
 
+interface UploadedFileData {
+  file: File;
+  filename: string;
+  fileBuffer: string;
+}
+
 const Index = () => {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<UploadedFileData | null>(null);
   const [uploadedFilename, setUploadedFilename] = useState<string | null>(null);
   const [generatedReport, setGeneratedReport] = useState<CreditReport | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,10 +41,10 @@ const Index = () => {
     setIsProcessing(true);
     toast({ title: "Uploading file...", description: "Please wait while the document is uploaded." });
     try {
-      const response = await fetch('http://localhost:3001/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+          const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
 
       if (!response.ok) {
         throw new Error('File upload failed');
@@ -47,7 +53,11 @@ const Index = () => {
       const result = await response.json();
       toast({ title: "File uploaded successfully!", description: `${file.name} is ready for analysis.` });
       
-      setUploadedFile(file);
+      setUploadedFile({
+        file: file,
+        filename: result.filename,
+        fileBuffer: result.fileBuffer
+      });
       setUploadedFilename(result.filename);
       setGeneratedReport(null);
       
@@ -62,7 +72,7 @@ const Index = () => {
     setIsProcessing(true);
     toast({ title: "Fetching file from URL..." });
     try {
-      const response = await fetch(`http://localhost:3001/fetch-pdf?url=${encodeURIComponent(url)}`);
+      const response = await fetch(`/api/fetch-pdf?url=${encodeURIComponent(url)}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch PDF from URL: ${response.statusText}`);
       }
@@ -91,15 +101,15 @@ const Index = () => {
     const originalFilename = uploadedFilename;
 
     try {
-      const response = await fetch('http://localhost:3001/api/generate-report', {
+      const response = await fetch('/api/generate-report', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          filename: originalFilename,
+          filename: uploadedFile.filename,
           companyName,
-          cacheBust: new Date().getTime(),
+          fileBuffer: uploadedFile.fileBuffer,
         }),
       });
 
@@ -144,7 +154,7 @@ const Index = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/ask-question', {
+      const response = await fetch('/api/ask-question', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -247,7 +257,7 @@ const Index = () => {
         {uploadedFile && !generatedReport && !isProcessing && (
           <div className="max-w-4xl mx-auto">
             <ReportGenerator 
-              file={uploadedFile} 
+              file={uploadedFile.file} 
               onStartAnalysis={handleStartAnalysis}
               isProcessing={isProcessing}
             />

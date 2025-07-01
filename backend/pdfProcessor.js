@@ -1,9 +1,21 @@
 const fs = require('fs');
 const pdf = require('pdf-parse');
 
-const extractTextFromPDF = async (filePath) => {
+const extractTextFromPDF = async (input) => {
   try {
-    const dataBuffer = fs.readFileSync(filePath);
+    let dataBuffer;
+    
+    // Check if input is a file path (string) or a buffer
+    if (typeof input === 'string') {
+      // Original behavior for file path
+      dataBuffer = fs.readFileSync(input);
+    } else if (Buffer.isBuffer(input)) {
+      // New behavior for buffer input
+      dataBuffer = input;
+    } else {
+      throw new Error('Input must be a file path (string) or Buffer');
+    }
+    
     const data = await pdf(dataBuffer);
     return data.text;
   } catch (error) {

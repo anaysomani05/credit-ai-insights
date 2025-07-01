@@ -1,0 +1,13 @@
+{
+  "name": "credit-ai-insights-generator",
+  "version": "1.0.0",
+  "description": "Credit AI Insights Generator - Full Stack Application",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "start": "cd backend && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+} 

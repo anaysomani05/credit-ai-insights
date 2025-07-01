@@ -33,3 +33,4 @@ open AI api key.png
 # Optional: Ignore bun lockfile if not using it
 bun.lockb
 
+.vercel
