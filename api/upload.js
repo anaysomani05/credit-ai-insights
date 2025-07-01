@@ -15,7 +15,7 @@ const upload = multer({
   }
 });
 
-async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -67,13 +67,11 @@ async function handler(req, res) {
       resolve();
     });
   });
-}
+};
 
 // Disable body parsing for this route
-handler.config = {
+module.exports.config = {
   api: {
     bodyParser: false,
   },
-};
-
-module.exports = handler; 
+}; 

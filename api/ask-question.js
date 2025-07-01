@@ -1,9 +1,64 @@
-const { answerQuestion } = require('../backend/aiProcessor');
+const { OpenAIEmbeddings } = require('@langchain/openai');
+const { MemoryVectorStore } = require('langchain/vectorstores/memory');
 
 // Simple in-memory cache for vector stores (note: this resets on each function invocation)
 const vectorStoreCache = new Map();
 
-export default async function handler(req, res) {
+// Query relevant chunks for each section
+const queryRelevantChunks = async (vectorStore, query, limit = 4) => {
+  const results = await vectorStore.similaritySearch(query, limit);
+  return results.map(doc => doc.pageContent);
+};
+
+const answerQuestion = async (vectorStore, question, companyName, apiKey) => {
+  try {
+    const relevantChunks = await queryRelevantChunks(vectorStore, question, 3);
+
+    const answerPrompt = `You are a financial analyst answering a question about ${companyName} based on their financial document. 
+
+    Question: ${question}
+    
+    Relevant Information from the Financial Document:
+    ${relevantChunks.join('\n\n')}
+    
+    Provide a clear, concise answer (2-3 sentences maximum) based only on the information available. Be specific with numbers and details when available. If the information is not available in the document, clearly state that.`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4-turbo-preview',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a professional financial analyst specializing in analyzing financial documents. Provide accurate, concise answers based strictly on the provided document content.'
+          },
+          {
+            role: 'user',
+            content: answerPrompt
+          }
+        ],
+        max_tokens: 200,
+        temperature: 0.1,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0]?.message?.content || 'Answer not available';
+  } catch (error) {
+    console.error('Error in Q&A:', error);
+    throw error;
+  }
+};
+
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -36,4 +91,4 @@ export default async function handler(req, res) {
     console.error('Error in Q&A:', error.message);
     res.status(500).json({ error: 'Failed to get an answer.' });
   }
-} 
+}; 
