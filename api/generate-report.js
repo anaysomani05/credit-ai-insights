@@ -204,9 +204,25 @@ module.exports = async function handler(req, res) {
   const { filename, companyName, fileBuffer } = req.body;
   const apiKey = process.env.OPENAI_API_KEY;
 
-  if (!filename || !companyName || !apiKey || !fileBuffer) {
-    console.error('Missing required parameters');
-    return res.status(400).json({ error: 'Missing required parameters' });
+  // Detailed parameter validation with specific error messages
+  const missingParams = [];
+  if (!filename) missingParams.push('filename');
+  if (!companyName) missingParams.push('companyName');
+  if (!fileBuffer) missingParams.push('fileBuffer');
+  if (!apiKey) missingParams.push('OPENAI_API_KEY (environment variable)');
+
+  if (missingParams.length > 0) {
+    console.error('Missing required parameters:', missingParams);
+    console.error('Received parameters:', {
+      filename: !!filename,
+      companyName: !!companyName,
+      fileBuffer: !!fileBuffer ? `${fileBuffer.length} chars` : 'missing',
+      apiKey: !!apiKey
+    });
+    return res.status(400).json({ 
+      error: `Missing required parameters: ${missingParams.join(', ')}`,
+      details: `Expected: filename, companyName, fileBuffer, and OPENAI_API_KEY environment variable`
+    });
   }
 
   try {

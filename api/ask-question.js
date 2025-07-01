@@ -75,8 +75,25 @@ module.exports = async function handler(req, res) {
   const { filename, question, companyName } = req.body;
   const apiKey = process.env.OPENAI_API_KEY;
 
-  if (!filename || !question || !companyName || !apiKey) {
-    return res.status(400).json({ error: 'Missing required parameters' });
+  // Detailed parameter validation
+  const missingParams = [];
+  if (!filename) missingParams.push('filename');
+  if (!question) missingParams.push('question');
+  if (!companyName) missingParams.push('companyName');
+  if (!apiKey) missingParams.push('OPENAI_API_KEY (environment variable)');
+
+  if (missingParams.length > 0) {
+    console.error('Missing required parameters for Q&A:', missingParams);
+    console.error('Received parameters:', {
+      filename: !!filename,
+      question: !!question,
+      companyName: !!companyName,
+      apiKey: !!apiKey
+    });
+    return res.status(400).json({ 
+      error: `Missing required parameters: ${missingParams.join(', ')}`,
+      details: `Expected: filename, question, companyName, and OPENAI_API_KEY environment variable`
+    });
   }
 
   const vectorStore = vectorStoreCache.get(filename);

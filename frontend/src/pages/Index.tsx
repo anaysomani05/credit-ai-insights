@@ -89,8 +89,13 @@ const Index = () => {
   };
 
   const handleStartAnalysis = async (companyName: string) => {
-    if (!uploadedFilename) {
+    if (!uploadedFile) {
       toast({ title: "Error", description: "No uploaded file found to analyze.", variant: "destructive" });
+      return;
+    }
+    
+    if (!uploadedFile.filename || !uploadedFile.fileBuffer) {
+      toast({ title: "Error", description: "File data is incomplete. Please upload the file again.", variant: "destructive" });
       return;
     }
     
@@ -98,7 +103,14 @@ const Index = () => {
     toast({ title: "Analysis Started", description: "The AI is now processing the document. This may take a few minutes." });
 
     // Store the original filename to be used for the Q&A session
-    const originalFilename = uploadedFilename;
+    const originalFilename = uploadedFile.filename;
+
+    // Debug: Log what we're sending
+    console.log('Sending to API:', {
+      filename: uploadedFile.filename,
+      companyName: companyName,
+      fileBufferLength: uploadedFile.fileBuffer?.length || 0
+    });
 
     try {
       const response = await fetch('/api/generate-report', {
@@ -108,13 +120,14 @@ const Index = () => {
         },
         body: JSON.stringify({
           filename: uploadedFile.filename,
-          companyName,
+          companyName: companyName.trim(),
           fileBuffer: uploadedFile.fileBuffer,
         }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('API Error Response:', errorText);
         throw new Error(errorText || 'Report generation failed on the server.');
       }
       
@@ -132,6 +145,7 @@ const Index = () => {
       toast({ title: "Analysis Complete!", description: "Your report has been successfully generated." });
 
     } catch (error) {
+      console.error('Analysis Error:', error);
       toast({ title: "Analysis Failed", description: `${error.message}`, variant: "destructive"});
     } finally {
       setIsProcessing(false);
