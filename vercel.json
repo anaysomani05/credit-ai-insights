@@ -22,8 +22,5 @@
     "api/ask-question.js": {
       "maxDuration": 60
     }
-  },
-  "env": {
-    "OPENAI_API_KEY": "@openai_api_key"
   }
 } 
