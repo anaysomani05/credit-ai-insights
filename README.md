@@ -1,4 +1,4 @@
-# 🏦 FinancialLLM Analyzer
+# FinancialLLM Analyzer
 
 **Universal Financial Document Intelligence Platform**
 
@@ -8,30 +8,30 @@ Transform any financial document into actionable intelligence using advanced LLM
 ![React](https://img.shields.io/badge/React-18.3.1-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue)
 
-## ✨ Features
+## Features
 
-### 🔍 **Universal Document Processing**
+### **Universal Document Processing**
 - **Multi-Format Support**: Quarterly reports, SEC filings, 10-K/10-Q forms, earnings transcripts
 - **Global Coverage**: Analyze financial documents from companies worldwide
 - **Smart Chunking**: Memory-optimized handling for large regulatory filings
 
-### 🤖 **LLM-Powered Analysis**
+### **LLM-Powered Analysis**
 - **Advanced RAG**: Context-aware information retrieval with vector embeddings
 - **Parallel Processing**: Simultaneous analysis of multiple report sections
 - **Error Resilience**: Automatic retry logic with intelligent rate limiting
 
-### 📊 **Generated Analysis Sections**
+### **Generated Analysis Sections**
 - **Company Overview**: Business model and strategic positioning analysis
 - **Financial Highlights**: Key metrics, ratios, and performance indicators
 - **Risk Assessment**: Business, financial, and market risk identification
 - **Executive Insights**: Management commentary and strategic direction
 
-### 💬 **Interactive Q&A**
+### **Interactive Q&A**
 - **Intelligent Chat**: Ask questions about the analyzed document
 - **Context-Aware Responses**: Answers based on actual document content
 - **Semantic Search**: Advanced retrieval for precise information
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Frontend
 - **React 18.3.1** with TypeScript 5.5.3
@@ -45,7 +45,7 @@ Transform any financial document into actionable intelligence using advanced LLM
 - **OpenAI GPT-4** - LLM analysis and embeddings
 - **Vector Store** - In-memory semantic search
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Backend Setup
 ```bash
@@ -64,7 +64,7 @@ npm run dev
 
 Application available at `http://localhost:8081`
 
-## 📁 Project Structure
+## Project Structure
 
 ### Frontend
 ```
@@ -90,7 +90,7 @@ backend/
 └── uploads/             # Temporary file storage
 ```
 
-## 📊 Supported Documents
+## Supported Documents
 
 - **Quarterly Reports** (10-Q, Q1/Q2/Q3/Q4)
 - **Annual Reports** (10-K, Annual Filings)
@@ -100,4 +100,4 @@ backend/
 
 ---
 
-**FinancialLLM Analyzer** - Transform financial documents into actionable intelligence with LLM precision. 🚀
+**FinancialLLM Analyzer** - Transform financial documents into actionable intelligence with LLM precision.
