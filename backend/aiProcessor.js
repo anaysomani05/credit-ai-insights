@@ -45,46 +45,47 @@ const queryRelevantChunks = async (vectorStore, query, limit = 4) => {
 // Generate section-specific content
 const generateSectionContent = async (relevantChunks, sectionType, companyName, apiKey) => {
     const sectionPrompts = {
-    overview: `You are an expert financial analyst. Your task is to provide a concise overview of ${companyName}'s business model and market position.
-- Focus on the company's core operations, strategy, and competitive advantages.
+    overview: `You are an expert financial analyst. Your task is to provide a concise overview of ${companyName}'s business model and strategic positioning.
+- Focus on the company's core operations, strategic priorities, and competitive advantages.
 - Each key point MUST be presented as a separate bullet point (•). THIS IS A STRICT REQUIREMENT.
 - Crucially, you must EXCLUDE the following:
   - Specific financial numbers or performance metrics (e.g., revenue, EBITDA, profit).
   - Any third-party opinions, "buy/sell" ratings, or price targets.
 - Format as plain text with bullet points using • symbol. Do NOT use markdown formatting.`,
     financialHighlights: `You are an expert financial analyst for the company ${companyName}.
-- Your task is to extract and summarize key financial metrics from the provided text.
+- Your task is to extract and summarize key financial metrics from the provided financial document.
 - Each key metric MUST be presented as a separate bullet point (•). THIS IS A STRICT REQUIREMENT.
 - For each metric, write a full sentence describing the trend, for example, "Revenue increased from X to Y, representing a Z% growth."
 - Do NOT combine multiple facts into one line. Each bullet point should describe one key metric.
-- Focus on the most important metrics like revenue, profit, EBITDA, and key operational metrics.
+- Focus on the most important metrics like revenue, profit, EBITDA, key operational metrics, and relevant financial ratios.
 - Present ONLY the key financial data points, each on its own line with a bullet point.
 
 Correct formatting example:
-• Revenue increased from INR 24,982 million in FY24 to INR 30,351 million in FY25, representing a 21.5% year-over-year growth.
-• EBITDA improved from INR 6,372 million in FY24 to INR 7,959 million in FY25, showing a 24.9% increase and enhanced operational efficiency.
-• Profit after tax grew from INR 3,100 million in FY24 to INR 3,861 million in FY25, marking a 24.6% increase.`,
-    keyRisks: `You are a risk analysis specialist. From the provided text, identify and summarize the key business, financial, and strategic risks for ${companyName}.
-- If a "Risk Factors" or "Risk Management" section exists in the text, prioritize information from there.
-- Group the risks into logical categories if possible (e.g., Market Risks, Operational Risks).
-- For each risk, provide a concise, one-sentence summary of the a potential negative impact.
+• Revenue increased from $24.9 billion in Q3 2023 to $30.4 billion in Q3 2024, representing a 22% year-over-year growth.
+• Net income improved from $6.4 billion in Q3 2023 to $8.0 billion in Q3 2024, showing a 25% increase.
+• Operating margin expanded from 25.6% to 26.2%, demonstrating improved operational efficiency.`,
+    keyRisks: `You are a risk analysis specialist. From the provided financial document, identify and summarize the key business, financial, market, and operational risks for ${companyName}.
+- If a "Risk Factors" or "Risk Management" section exists in the document, prioritize information from there.
+- Group the risks into logical categories if possible (e.g., Market Risks, Operational Risks, Financial Risks, Regulatory Risks).
+- For each risk, provide a concise, one-sentence summary of the potential negative impact.
+- Include both company-specific risks and broader industry/market risks that may affect the company.
 - Exclude any information about risk mitigation strategies or management's plans to address the risks.
 - Format as plain text with bullet points using • symbol. Do NOT use markdown formatting.`,
-    managementCommentary: `You are an executive summary writer. Based on the provided text, summarize the forward-looking commentary and strategic priorities of ${companyName}'s management.
-- Focus on direct statements regarding future plans, growth initiatives, investment strategies, and outlook.
+    managementCommentary: `You are an executive summary writer. Based on the provided financial document, summarize the forward-looking commentary and strategic priorities of ${companyName}'s management.
+- Focus on direct statements regarding future plans, growth initiatives, investment strategies, market outlook, and strategic direction.
 - Each key point MUST be presented as a separate bullet point (•). THIS IS A STRICT REQUIREMENT.
-- Source this information from sections like "Chairman's Letter" or "Management Discussion & Analysis".
+- Source this information from sections like "Management Discussion & Analysis", "CEO Letter", "Chairman's Message", or executive commentary.
 - Crucially, you must EXCLUDE the following:
   - Any financial results or past performance metrics.
   - Any information already identified as a Key Risk.
-  - Any third-party opinions, "buy/sell" ratings, or price targets.
+  - Any third-party opinions, analyst ratings, or price targets.
 - Format as plain text with bullet points using • symbol. Do NOT use markdown formatting.`
   };
 
   const prompt = `${sectionPrompts[sectionType]}
 
-Relevant Information:
-${relevantChunks.join('\\n\\n')}
+Relevant Information from Financial Document:
+${relevantChunks.join('\n\n')}
 
 CRITICAL FORMATTING REQUIREMENTS:
 - Use bullet points (•) for lists where specified in the section prompt.
@@ -103,7 +104,7 @@ CRITICAL FORMATTING REQUIREMENTS:
       messages: [
         {
           role: 'system',
-          content: "You are a helpful AI assistant tasked with analyzing financial reports. Follow the user's instructions carefully, especially the formatting requirements. Never use markdown formatting - use only plain text with bullet points and line breaks."
+          content: "You are a professional financial analyst specializing in analyzing financial documents including quarterly reports, SEC filings, 10-K/10-Q forms, earnings transcripts, and annual reports. Follow the user's instructions carefully, especially the formatting requirements. Never use markdown formatting - use only plain text with bullet points and line breaks."
         },
         {
           role: 'user',
@@ -133,7 +134,7 @@ CRITICAL FORMATTING REQUIREMENTS:
   return content;
 };
 
-// Main function to generate report sections
+// Main function to generate financial analysis sections
 const generateReportSections = async (extractedText, companyName, apiKey) => {
   try {
     const cleanedText = cleanText(extractedText);
@@ -141,10 +142,10 @@ const generateReportSections = async (extractedText, companyName, apiKey) => {
     const vectorStore = await createVectorStore(documents, apiKey);
 
     const sectionQueries = {
-      overview: `company business model overview market position ${companyName}`,
-      financialHighlights: `financial metrics revenue profit margin ${companyName}`,
-      keyRisks: `risk factors operational financial market ${companyName}`,
-      managementCommentary: `management discussion outlook strategy ${companyName}`
+      overview: `company business model strategic positioning operations ${companyName}`,
+      financialHighlights: `financial performance metrics revenue profit margins earnings ${companyName}`,
+      keyRisks: `risk factors operational financial market regulatory risks ${companyName}`,
+      managementCommentary: `management outlook strategy future plans growth initiatives ${companyName}`
     };
 
     const sectionTypes = ['overview', 'financialHighlights', 'keyRisks', 'managementCommentary'];
@@ -164,7 +165,7 @@ const generateReportSections = async (extractedText, companyName, apiKey) => {
 
     return { sections, vectorStore };
   } catch (error) {
-    console.error('Error in report generation:', error);
+    console.error('Error in financial document analysis:', error);
     throw error;
   }
 };
@@ -173,14 +174,14 @@ const answerQuestion = async (vectorStore, question, companyName, apiKey) => {
   try {
     const relevantChunks = await queryRelevantChunks(vectorStore, question, 3);
 
-    const answerPrompt = `You are a financial analyst answering a question about ${companyName}. 
+    const answerPrompt = `You are a financial analyst answering a question about ${companyName} based on their financial document. 
 
     Question: ${question}
     
-    Relevant Information from the Report:
-    ${relevantChunks.join('\\n\\n')}
+    Relevant Information from the Financial Document:
+    ${relevantChunks.join('\n\n')}
     
-    Provide a clear, concise answer (2-3 sentences maximum) based only on the information available. Be specific with numbers when available.`;
+    Provide a clear, concise answer (2-3 sentences maximum) based only on the information available. Be specific with numbers and details when available. If the information is not available in the document, clearly state that.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -193,14 +194,14 @@ const answerQuestion = async (vectorStore, question, companyName, apiKey) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a professional financial analyst. Provide accurate, concise answers.'
+            content: 'You are a professional financial analyst specializing in analyzing financial documents. Provide accurate, concise answers based strictly on the provided document content.'
           },
           {
             role: 'user',
             content: answerPrompt
           }
         ],
-        max_tokens: 150,
+        max_tokens: 200,
         temperature: 0.1,
       }),
     });
@@ -210,9 +211,9 @@ const answerQuestion = async (vectorStore, question, companyName, apiKey) => {
     }
 
     const data = await response.json();
-    return data.choices[0]?.message?.content || 'I could not generate an answer based on the available information.';
+    return data.choices[0]?.message?.content || 'Unable to provide answer based on available information.';
   } catch (error) {
-    console.error('Error answering question:', error);
+    console.error('Error in Q&A processing:', error);
     throw error;
   }
 };

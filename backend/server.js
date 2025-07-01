@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -75,10 +76,11 @@ app.post('/api/upload', upload.single('report'), (req, res) => {
 
 // New endpoint to trigger report generation
 app.post('/api/generate-report', async (req, res) => {
-  console.log('=== REPORT GENERATION STARTED ===');
+  console.log('=== FINANCIAL DOCUMENT ANALYSIS STARTED ===');
   console.log('Request body:', req.body);
   
-  const { filename, companyName, apiKey } = req.body;
+  const { filename, companyName } = req.body;
+  const apiKey = process.env.OPENAI_API_KEY;
 
   if (!filename || !companyName || !apiKey) {
     console.error('Missing required parameters:', { filename: !!filename, companyName: !!companyName, apiKey: !!apiKey });
@@ -100,25 +102,25 @@ app.post('/api/generate-report', async (req, res) => {
     }
 
     // 2. Generate report sections using AI
-    console.log('Step 2: Starting AI report generation...');
+    console.log('Step 2: Starting LLM-powered financial analysis...');
     const { sections, vectorStore } = await generateReportSections(extractedText, companyName, apiKey);
-    console.log('AI report generation completed. Sections:', Object.keys(sections));
+    console.log('Financial analysis completed. Sections:', Object.keys(sections));
 
     // Cache the vector store for Q&A
     vectorStoreCache.set(filename, vectorStore);
-    console.log(`Vector store for ${filename} cached.`);
+    console.log(`Vector store for ${filename} cached for Q&A.`);
 
     // 3. Send report back to client
-    console.log('Step 3: Sending response to client...');
+    console.log('Step 3: Sending financial analysis to client...');
     res.status(200).json(sections);
-    console.log('=== REPORT GENERATION COMPLETED SUCCESSFULLY ===');
+    console.log('=== FINANCIAL DOCUMENT ANALYSIS COMPLETED SUCCESSFULLY ===');
 
   } catch (error) {
-    console.error('=== ERROR DURING REPORT GENERATION ===');
+    console.error('=== ERROR DURING FINANCIAL ANALYSIS ===');
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     console.error('=== END ERROR DETAILS ===');
-    res.status(500).send(`Failed to generate report: ${error.message}`);
+    res.status(500).send(`Failed to generate financial analysis: ${error.message}`);
   } finally {
     // 4. Clean up the uploaded file
     fs.unlink(filePath, (err) => {
@@ -132,7 +134,8 @@ app.post('/api/generate-report', async (req, res) => {
 });
 
 app.post('/api/ask-question', async (req, res) => {
-  const { filename, question, companyName, apiKey } = req.body;
+  const { filename, question, companyName } = req.body;
+  const apiKey = process.env.OPENAI_API_KEY;
 
   if (!filename || !question || !companyName || !apiKey) {
     return res.status(400).send('Missing required parameters.');
@@ -153,5 +156,5 @@ app.post('/api/ask-question', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`FinancialLLM Analyzer Backend Server running on http://localhost:${port}`);
 }); 

@@ -12,116 +12,62 @@ interface FileUploadProps {
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, onUrlSubmit }) => {
-  const [isDragOver, setIsDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [url, setUrl] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === 'application/pdf') {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOver(false);
+    
+    const file = event.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
     setIsDragOver(true);
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
     setIsDragOver(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    const pdfFile = files.find(file => file.type === 'application/pdf');
-    
-    if (pdfFile) {
-      validateAndSetFile(pdfFile);
-    } else {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a PDF file.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      validateAndSetFile(file);
-    }
-  };
-
-  const validateAndSetFile = (file: File) => {
-    if (file.type !== 'application/pdf') {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a PDF file.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (file.size > 50 * 1024 * 1024) { // 50MB limit
-      toast({
-        title: "File too large",
-        description: "Please upload a file smaller than 50MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSelectedFile(file);
-    toast({
-      title: "File uploaded successfully",
-      description: `${file.name} is ready for processing.`,
-    });
-  };
-
-  const handleUploadClick = () => {
-    if (selectedFile) {
-      onFileUpload(selectedFile);
-    }
-  };
-
-  const handleUrlSubmit = () => {
-    if (!url) {
-      toast({
-        title: "URL is empty",
-        description: "Please enter a valid URL.",
-        variant: "destructive",
-      });
-      return;
-    }
-    // Basic URL validation
-    try {
-      new URL(url);
-      onUrlSubmit(url);
-    } catch (_) {
-      toast({
-        title: "Invalid URL",
-        description: "Please enter a valid URL.",
-        variant: "destructive",
-      });
-    }
   };
 
   const openFileDialog = () => {
     fileInputRef.current?.click();
   };
 
+  const handleUploadClick = () => {
+    if (selectedFile) {
+      onFileUpload(selectedFile);
+      setSelectedFile(null);
+    }
+  };
+
+  const handleUrlSubmit = () => {
+    if (url.trim()) {
+      onUrlSubmit(url.trim());
+      setUrl('');
+    }
+  };
+
   return (
-    <Tabs defaultValue="upload" className="w-full space-y-6">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="upload">
-          <Upload className="h-4 w-4 mr-2" />
-          Upload File
-        </TabsTrigger>
-        <TabsTrigger value="url">
-          <Link className="h-4 w-4 mr-2" />
-          From URL
-        </TabsTrigger>
+    <Tabs defaultValue="upload" className="w-full">
+      <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsTrigger value="upload">Upload Document</TabsTrigger>
+        <TabsTrigger value="url">From URL</TabsTrigger>
       </TabsList>
 
       <TabsContent value="upload">
@@ -142,7 +88,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, onUrlSubmi
               
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                  Upload Annual Report
+                  Upload Financial Document
                 </h3>
                 <p className="text-slate-600 mb-4">
                   Drag and drop your PDF file here, or click to browse
@@ -150,7 +96,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, onUrlSubmi
                 
                 <div className="flex items-center justify-center space-x-2 text-sm text-slate-500">
                   <AlertCircle className="h-4 w-4" />
-                  <span>Supports PDF files up to 50MB</span>
+                  <span>Supports quarterly reports, SEC filings, 10-K/10-Q forms, earnings transcripts, annual reports</span>
                 </div>
               </div>
 
@@ -194,17 +140,17 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, onUrlSubmi
             </div>
             <div>
               <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                Process Report from URL
+                Process Financial Document from URL
               </h3>
               <p className="text-slate-600 mb-4">
-                Enter the public URL of a PDF annual report.
+                Enter the public URL of a PDF financial document (SEC filings, quarterly reports, etc.).
               </p>
             </div>
           </div>
           <div className="flex w-full items-center space-x-2 mt-4">
             <Input 
               type="url" 
-              placeholder="https://example.com/report.pdf" 
+              placeholder="https://example.com/10k-report.pdf" 
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />

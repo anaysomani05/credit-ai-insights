@@ -8,7 +8,7 @@ import { FileText, Loader2 } from 'lucide-react';
 
 interface ReportGeneratorProps {
   file: File;
-  onStartAnalysis: (companyName: string, apiKey: string) => void;
+  onStartAnalysis: (companyName: string) => void;
   isProcessing: boolean;
 }
 
@@ -18,7 +18,6 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
   isProcessing,
 }) => {
   const [companyName, setCompanyName] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const { toast } = useToast();
 
   const handleGenerate = () => {
@@ -31,16 +30,7 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       return;
     }
 
-    if (!apiKey.trim()) {
-      toast({
-        title: "API key required",
-        description: "Please enter your OpenAI API key to proceed.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    onStartAnalysis(companyName, apiKey);
+    onStartAnalysis(companyName);
   };
 
   return (
@@ -49,7 +39,7 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
         <div className="flex items-center space-x-3 mb-6">
           <FileText className="h-6 w-6 text-blue-600" />
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-slate-900">Document Ready for Analysis</h3>
+            <h3 className="text-lg font-semibold text-slate-900">Financial Document Ready for Analysis</h3>
             <p className="text-slate-600">{file.name}</p>
           </div>
         </div>
@@ -61,26 +51,10 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               id="companyName"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              placeholder="e.g., Reliance Industries Limited"
+              placeholder="e.g., Apple Inc., Microsoft Corporation, Tesla Inc."
               className="mt-1"
               disabled={isProcessing}
             />
-          </div>
-
-          <div>
-            <Label htmlFor="apiKey">OpenAI API Key</Label>
-            <Input
-              id="apiKey"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-..."
-              className="mt-1"
-              disabled={isProcessing}
-            />
-            <p className="text-sm text-slate-500 mt-1">
-              Your API key will be sent to the backend for processing.
-            </p>
           </div>
         </div>
       </Card>
@@ -97,7 +71,7 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               Analyzing...
             </>
           ) : (
-            'Analyze Document'
+            'Analyze Financial Document'
           )}
         </Button>
       </div>

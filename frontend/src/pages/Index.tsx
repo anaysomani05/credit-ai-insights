@@ -26,8 +26,6 @@ const Index = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const [reportContext, setReportContext] = useState<string>('');
-  const [apiKey, setApiKey] = useState<string>('');
   const [sessionFilename, setSessionFilename] = useState<string | null>(null);
 
   const handleFileUpload = async (file: File) => {
@@ -80,7 +78,7 @@ const Index = () => {
     }
   };
 
-  const handleStartAnalysis = async (companyName: string, apiKey: string) => {
+  const handleStartAnalysis = async (companyName: string) => {
     if (!uploadedFilename) {
       toast({ title: "Error", description: "No uploaded file found to analyze.", variant: "destructive" });
       return;
@@ -101,7 +99,6 @@ const Index = () => {
         body: JSON.stringify({
           filename: originalFilename,
           companyName,
-          apiKey,
           cacheBust: new Date().getTime(),
         }),
       });
@@ -121,7 +118,6 @@ const Index = () => {
 
       setGeneratedReport(finalReport);
       setSessionFilename(originalFilename); // Use the original filename for Q&A
-      setApiKey(apiKey);
 
       toast({ title: "Analysis Complete!", description: "Your report has been successfully generated." });
 
@@ -134,19 +130,16 @@ const Index = () => {
     }
   };
 
-
   const resetApplication = () => {
     setUploadedFile(null);
     setUploadedFilename(null);
     setGeneratedReport(null);
     setIsProcessing(false);
-    setReportContext('');
-    setApiKey('');
     setSessionFilename(null);
   };
 
   const handleAskQuestion = async (question: string): Promise<string> => {
-    if (!generatedReport || !apiKey || !sessionFilename) {
+    if (!generatedReport || !sessionFilename) {
       return "Cannot ask questions until a report has been generated.";
     }
 
@@ -160,7 +153,6 @@ const Index = () => {
           filename: sessionFilename,
           question,
           companyName: generatedReport.companyName,
-          apiKey,
         }),
       });
 
@@ -188,13 +180,13 @@ const Index = () => {
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">CreditAI Analyzer</h1>
-                <p className="text-slate-600">AI-Powered Credit Summary Reports for BSE Companies</p>
+                <h1 className="text-2xl font-bold text-slate-900">FinancialLLM Analyzer</h1>
+                <p className="text-slate-600">Transform Any Financial Document into Actionable Intelligence</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <Badge variant="secondary" className="bg-green-100 text-green-800">
-                Backend v3.0
+                Universal Analysis
               </Badge>
             </div>
           </div>
@@ -208,11 +200,11 @@ const Index = () => {
             {/* Hero Section & Features etc. - no change here */}
             <div className="space-y-4">
               <h2 className="text-4xl font-bold text-slate-900">
-                Transform Annual Reports into 
+                Transform Financial Documents into 
                 <span className="text-blue-600"> Actionable Insights</span>
               </h2>
               <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-                Upload or link to BSE company annual reports and get server-processed credit summaries in minutes.
+                Analyze quarterly results, SEC filings, 10-K reports, earnings transcripts, and financial documents from companies worldwide with AI-powered intelligence.
               </p>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
@@ -220,29 +212,29 @@ const Index = () => {
                 <div className="bg-blue-100 p-3 rounded-full w-fit mx-auto">
                   <FileText className="h-6 w-6 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">Advanced PDF Processing</h3>
-                <p className="text-slate-600">Efficient text extraction from annual reports and regulatory filings</p>
+                <h3 className="text-lg font-semibold text-slate-900">Universal Document Processing</h3>
+                <p className="text-slate-600">Process quarterly reports, SEC filings, 10-K/10-Q forms, earnings transcripts, and annual reports</p>
               </Card>
               <Card className="p-6 text-center space-y-4 hover:shadow-lg transition-shadow">
                 <div className="bg-green-100 p-3 rounded-full w-fit mx-auto">
                   <Zap className="h-6 w-6 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">AI-Powered Analysis</h3>
-                <p className="text-slate-600">Advanced RAG processing with intelligent section generation</p>
+                <h3 className="text-lg font-semibold text-slate-900">LLM-Powered Analysis</h3>
+                <p className="text-slate-600">Advanced language models with intelligent RAG processing for comprehensive financial insights</p>
               </Card>
               <Card className="p-6 text-center space-y-4 hover:shadow-lg transition-shadow">
                 <div className="bg-purple-100 p-3 rounded-full w-fit mx-auto">
                   <Shield className="h-6 w-6 text-purple-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900">Risk Assessment</h3>
-                <p className="text-slate-600">Comprehensive identification of key business and financial risks</p>
+                <p className="text-slate-600">Comprehensive identification of business, financial, and market risks across all document types</p>
               </Card>
               <Card className="p-6 text-center space-y-4 hover:shadow-lg transition-shadow">
                 <div className="bg-purple-100 p-3 rounded-full w-fit mx-auto">
                   <Users className="h-6 w-6 text-purple-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">Management Commentary</h3>
-                <p className="text-slate-600">Insights into strategic direction and future outlook</p>
+                <h3 className="text-lg font-semibold text-slate-900">Executive Insights</h3>
+                <p className="text-slate-600">Extract management commentary, strategic direction, and forward-looking statements</p>
               </Card>
             </div>
             {/* Upload Section */}
@@ -268,7 +260,7 @@ const Index = () => {
               <div className="bg-blue-100 p-6 rounded-full w-fit mx-auto mb-6">
                 <Users className="h-12 w-12 text-blue-600" />
               </div>
-              <h3 className="text-2xl font-semibold text-slate-900 mb-4">Processing Your Report on the Server</h3>
+              <h3 className="text-2xl font-semibold text-slate-900 mb-4">Processing Your Financial Document</h3>
               <p className="text-lg text-slate-600">Our AI is analyzing the document... Please be patient.</p>
             </div>
             <div className="w-full max-w-md mx-auto bg-slate-200 rounded-full h-3">
@@ -280,9 +272,9 @@ const Index = () => {
         {generatedReport && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-slate-900">Generated Credit Report</h2>
+              <h2 className="text-2xl font-bold text-slate-900">Generated Financial Analysis Report</h2>
               <Button onClick={resetApplication} variant="outline">
-                Generate New Report
+                Analyze New Document
               </Button>
             </div>
             
@@ -303,10 +295,12 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-16">
+      <footer className="bg-white border-t border-slate-200 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-slate-600">
-            <p>&copy; 2024 CreditAI Analyzer. All processing is now performed on the server.</p>
+          <div className="text-center">
+            <p className="text-slate-600">
+              Powered by <strong>FinancialLLM Analyzer</strong> - Transform financial documents into actionable intelligence
+            </p>
           </div>
         </div>
       </footer>
