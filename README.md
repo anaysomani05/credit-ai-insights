@@ -45,24 +45,11 @@ Transform any financial document into actionable intelligence using advanced LLM
 - **OpenAI GPT-4** - LLM analysis and embeddings
 - **Vector Store** - In-memory semantic search
 
-## Quick Start
+## Try It Here
 
-### Backend Setup
-```bash
-cd backend
-npm install
-echo "OPENAI_API_KEY=your_openai_api_key_here" > .env
-npm start
-```
+**Link**: [financial-llm.vercel.app](https://financial-llm.vercel.app)
 
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Application available at `http://localhost:8081`
+Experience the full power of FinancialLLM Analyzer directly in your browser. Upload any financial document and get instant AI-powered analysis.
 
 ## Project Structure
 
